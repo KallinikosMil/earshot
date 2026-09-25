@@ -1,0 +1,5 @@
+assets/
+node_modules/
+.expo/
+package-lock.json
+tsconfig.json

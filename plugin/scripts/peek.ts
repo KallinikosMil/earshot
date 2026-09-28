@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
-import { projectName } from '../../src/state/derive';
+import { hostname } from 'node:os';
+import { deriveSessions } from '../../src/state/derive';
 import type { AgentRow } from '../../src/state/types';
 
 const output = execFileSync('claude', ['agents', '--json'], {
@@ -8,4 +9,4 @@ const output = execFileSync('claude', ['agents', '--json'], {
 
 const outputParsed: AgentRow[] = JSON.parse(output);
 
-console.log(outputParsed.map((agent) => projectName(agent.cwd)));
+console.table(deriveSessions(outputParsed, hostname(), Date.now()));

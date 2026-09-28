@@ -1,5 +1,23 @@
 import type { AgentRow, Session, SessionState } from './types';
-//TODO:  implement waitingCount function
+const stateMap: Record<AgentRow['kind'], Record<string, SessionState>> = {
+  interactive: {
+    waiting: 'waiting',
+    idle: 'finished',
+    busy: 'working',
+  },
+  background: {
+    blocked: 'waiting',
+    done: 'finished',
+    stopped: 'finished',
+    failed: 'finished',
+    working: 'working',
+  },
+};
+const stateRank: Record<SessionState, number> = {
+  waiting: 0,
+  finished: 1,
+  working: 2,
+};
 export const projectName = (cwd: string): string => {
   if (!cwd) return 'unknown';
   const splitted = cwd.split(/[\\/]/);
@@ -8,20 +26,6 @@ export const projectName = (cwd: string): string => {
 };
 const toSession = (row: AgentRow, computerId: string): Session | null => {
   let state: SessionState | undefined;
-  const stateMap: Record<AgentRow['kind'], Record<string, SessionState>> = {
-    interactive: {
-      waiting: 'waiting',
-      idle: 'finished',
-      busy: 'working',
-    },
-    background: {
-      blocked: 'waiting',
-      done: 'finished',
-      stopped: 'finished',
-      failed: 'finished',
-      working: 'working',
-    },
-  };
   if (row.kind === 'interactive') {
     if (!row.status) return null;
     state = stateMap.interactive[row.status];
@@ -31,6 +35,16 @@ const toSession = (row: AgentRow, computerId: string): Session | null => {
     state = stateMap.background[row.state];
   }
   if (!state) return null;
+  const isWaitingFor = (v: string | undefined): v is Session['waitingFor'] => {
+    if (!v) return false;
+    return [
+      'permission prompt',
+      'input needed',
+      'sandbox request',
+      'worker request',
+      'dialog open',
+    ].includes(v);
+  };
   return {
     id: row.sessionId,
     name: row.name || projectName(row.cwd),
@@ -38,7 +52,10 @@ const toSession = (row: AgentRow, computerId: string): Session | null => {
     state: state,
     since: row.startedAt,
     computerId,
-    // waitingFor: row.waitingFor as any,
+    waitingFor:
+      state === 'waiting' && isWaitingFor(row.waitingFor)
+        ? row.waitingFor
+        : undefined,
   };
 };
 
@@ -47,11 +64,6 @@ export const deriveSessions = (
   computerId: string,
   now: number,
 ): Session[] => {
-  const stateRank: Record<SessionState, number> = {
-    waiting: 0,
-    working: 2,
-    finished: 1,
-  };
   return rows
     .map((row) => toSession(row, computerId))
     .filter((s) => s !== null)

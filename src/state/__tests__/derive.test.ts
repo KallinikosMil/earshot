@@ -75,6 +75,27 @@ describe('deriveSessions', () => {
       deriveSessions([...rows].reverse(), 'pc', 0).map((s) => s.id),
     ).toEqual(['alpha', 'zeta']);
   });
+  test('carries waitingFor only when waiting', () => {
+    const [w, b] = deriveSessions(
+      [
+        row({ sessionId: 'w', status: 'waiting', waitingFor: 'input needed' }),
+        row({ sessionId: 'b', status: 'busy', waitingFor: 'input needed' }),
+      ],
+      'pc',
+      0,
+    );
+    expect(w.waitingFor).toBe('input needed');
+    expect(b.waitingFor).toBeUndefined();
+  });
+
+  test('drops a waitingFor value we do not know', () => {
+    const [s] = deriveSessions(
+      [row({ status: 'waiting', waitingFor: 'something new' })],
+      'pc',
+      0,
+    );
+    expect(s.waitingFor).toBeUndefined();
+  });
 });
 
 describe('waitingCount', () => {

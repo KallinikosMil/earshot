@@ -3,7 +3,7 @@ import type { AgentRow } from '../types';
 
 describe('projectName', () => {
   test('takes the last folder', () => {
-    expect(projectName('C:\Users\k\research')).toBe('research');
+    expect(projectName('C:\\Users\\k\\research')).toBe('research');
   });
 
   test('survives a trailing separator', () => {

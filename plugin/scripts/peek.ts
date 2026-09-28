@@ -8,4 +8,4 @@ const output = execFileSync('claude', ['agents', '--json'], {
 
 const outputParsed: AgentRow[] = JSON.parse(output);
 
-outputParsed.map((agent) => projectName(agent.cwd));
+console.log(outputParsed.map((agent) => projectName(agent.cwd)));

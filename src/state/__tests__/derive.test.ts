@@ -13,6 +13,10 @@ describe('projectName', () => {
   test('empty becomes unknown', () => {
     expect(projectName('')).toBe('unknown');
   });
+
+  test('input / output /', () => {
+    expect(projectName('/')).toBe('/');
+  });
 });
 
 // A complete, valid row. Each test overrides only what it cares about.
@@ -45,6 +49,31 @@ describe('deriveSessions', () => {
       0,
     );
     expect(out.map((s) => s.id)).toEqual(['w', 'b']);
+  });
+  test('longest wait comes first', () => {
+    const out = deriveSessions(
+      [
+        row({ sessionId: 'new', status: 'waiting', startedAt: 5000 }),
+        row({ sessionId: 'old', status: 'waiting', startedAt: 1000 }),
+      ],
+      'pc',
+      0,
+    );
+    expect(out.map((s) => s.id)).toEqual(['old', 'new']);
+  });
+
+  test('equal times sort by id, whatever the input order', () => {
+    const rows = [
+      row({ sessionId: 'zeta', status: 'waiting', startedAt: 7000 }),
+      row({ sessionId: 'alpha', status: 'waiting', startedAt: 7000 }),
+    ];
+    expect(deriveSessions(rows, 'pc', 0).map((s) => s.id)).toEqual([
+      'alpha',
+      'zeta',
+    ]);
+    expect(
+      deriveSessions([...rows].reverse(), 'pc', 0).map((s) => s.id),
+    ).toEqual(['alpha', 'zeta']);
   });
 });
 

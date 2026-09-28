@@ -3,7 +3,7 @@ export type SessionState = 'waiting' | 'finished' | 'working';
 export type WaitingFor =
   | 'permission prompt'
   | 'input needed'
-  | 'sandbox requested'
+  | 'sandbox request'
   | 'worker request'
   | 'dialog open';
 export type Session = {

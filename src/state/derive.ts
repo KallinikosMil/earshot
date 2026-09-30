@@ -1,4 +1,4 @@
-import type { AgentRow, Session, SessionState } from './types';
+import type { AgentRow, Session, SessionState, WaitingFor } from './types';
 const stateMap: Record<AgentRow['kind'], Record<string, SessionState>> = {
   interactive: {
     waiting: 'waiting',
@@ -12,6 +12,16 @@ const stateMap: Record<AgentRow['kind'], Record<string, SessionState>> = {
     failed: 'finished',
     working: 'working',
   },
+};
+const isWaitingFor = (v: string | undefined): v is WaitingFor => {
+  if (!v) return false;
+  return [
+    'permission prompt',
+    'input needed',
+    'sandbox request',
+    'worker request',
+    'dialog open',
+  ].includes(v);
 };
 const stateRank: Record<SessionState, number> = {
   waiting: 0,
@@ -35,16 +45,7 @@ const toSession = (row: AgentRow, computerId: string): Session | null => {
     state = stateMap.background[row.state];
   }
   if (!state) return null;
-  const isWaitingFor = (v: string | undefined): v is Session['waitingFor'] => {
-    if (!v) return false;
-    return [
-      'permission prompt',
-      'input needed',
-      'sandbox request',
-      'worker request',
-      'dialog open',
-    ].includes(v);
-  };
+
   return {
     id: row.sessionId,
     name: row.name || projectName(row.cwd),
